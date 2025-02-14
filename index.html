@@ -43,10 +43,10 @@
         };
 
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') keys.left = true;
-            if (e.key === 'ArrowRight') keys.right = true;
-            if (e.key === 'ArrowUp') keys.up = true;
-            if (e.key === 'ArrowDown') keys.down = true;
+            if (e.key === 'A') keys.left = true;
+            if (e.key === 'D') keys.right = true;
+            if (e.key === 'W') keys.up = true;
+            if (e.key === 'S') keys.down = true;
             if (e.key === ' ') shootBullet();
         });
 
