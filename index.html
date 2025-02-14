@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skibidi Shooter Game</title>
+    <style>
+        body { margin: 0; padding: 0; }
+        canvas { display: block; background-color: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Game variables
+        let player = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            width: 50,
+            height: 50,
+            speed: 5,
+            health: 100,
+            color: 'blue'
+        };
+
+        let bullets = [];
+        let enemies = [];
+        let gameOver = false;
+
+        // Handle player movement
+        let keys = {
+            left: false,
+            right: false,
+            up: false,
+            down: false,
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') keys.left = true;
+            if (e.key === 'ArrowRight') keys.right = true;
+            if (e.key === 'ArrowUp') keys.up = true;
+            if (e.key === 'ArrowDown') keys.down = true;
+            if (e.key === ' ') shootBullet();
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'A') keys.left = false;
+            if (e.key === 'D') keys.right = false;
+            if (e.key === 'W') keys.up = false;
+            if (e.key === 'S') keys.down = false;
+        });
+
+        // Bullet class
+        class Bullet {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 5;
+                this.height = 10;
+                this.speed = 10;
+                this.color = 'red';
+            }
+            update() {
+                this.y -= this.speed;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        // Enemy class
+        class Enemy {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = -50;
+                this.width = 50;
+                this.height = 50;
+                this.speed = 2 + Math.random() * 3;
+                this.color = 'green';
+            }
+            update() {
+                this.y += this.speed;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        // Shoot bullet
+        function shootBullet() {
+            if (gameOver) return;
+            const bullet = new Bullet(player.x + player.width / 2 - 2, player.y);
+            bullets.push(bullet);
+        }
+
+        // Update player movement
+        function updatePlayer() {
+            if (keys.left && player.x > 0) player.x -= player.speed;
+            if (keys.right && player.x + player.width < canvas.width) player.x += player.speed;
+            if (keys.up && player.y > 0) player.y -= player.speed;
+            if (keys.down && player.y + player.height < canvas.height) player.y += player.speed;
+        }
+
+        // Check for collisions between bullets and enemies
+        function checkCollisions() {
+            bullets.forEach((bullet, bulletIndex) => {
+                enemies.forEach((enemy, enemyIndex) => {
+                    if (bullet.x < enemy.x + enemy.width &&
+                        bullet.x + bullet.width > enemy.x &&
+                        bullet.y < enemy.y + enemy.height &&
+                        bullet.y + bullet.height > enemy.y) {
+                        // Remove bullet and enemy on collision
+                        bullets.splice(bulletIndex, 1);
+                        enemies.splice(enemyIndex, 1);
+                    }
+                });
+            });
+        }
+
+        // Handle enemy damage to player
+        function checkEnemyCollisions() {
+            enemies.forEach((enemy) => {
+                if (enemy.x < player.x + player.width &&
+                    enemy.x + enemy.width > player.x &&
+                    enemy.y < player.y + player.height &&
+                    enemy.y + enemy.height > player.y) {
+                    // Player takes damage
+                    player.health -= 10;
+                    if (player.health <= 0) {
+                        gameOver = true;
+                    }
+                }
+            });
+        }
+
+        // Update game logic
+        function update() {
+            if (gameOver) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.font = '48px Arial';
+                ctx.fillStyle = 'red';
+                ctx.fillText('Game Over', canvas.width / 2 - 120, canvas.height / 2);
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update player
+            updatePlayer();
+
+            // Update bullets
+            bullets.forEach((bullet, index) => {
+                bullet.update();
+                if (bullet.y < 0) bullets.splice(index, 1);
+                bullet.draw();
+            });
+
+            // Update enemies
+            if (Math.random() < 0.02) {
+                enemies.push(new Enemy());
+            }
+
+            enemies.forEach((enemy, index) => {
+                enemy.update();
+                if (enemy.y > canvas.height) enemies.splice(index, 1);
+                enemy.draw();
+            });
+
+            checkCollisions();
+            checkEnemyCollisions();
+
+            // Display health
+            ctx.fillStyle = 'black';
+            ctx.fillText('Health: ' + player.health, 10, 30);
+
+            // Draw player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            requestAnimationFrame(update);
+        }
+
+        // Start the game
+        update();
+    </script>
+</body>
+</html>
